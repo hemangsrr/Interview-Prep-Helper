@@ -1,0 +1,59 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section class="p-0 border-0 bg-transparent">
+  <div class="row g-3 align-items-stretch">
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h5 mb-3 d-flex align-items-center gap-2"><i class="bi bi-file-earmark-text"></i> 1) Provide Job Description</h2>
+          <form id="jdForm" action="/analyze_jd" method="post" enctype="multipart/form-data" class="vstack gap-2">
+            <label class="form-label">Paste JD Text</label>
+            <textarea class="form-control" id="jd_text" name="jd_text" rows="10" placeholder="Paste the job description here..."></textarea>
+            <div class="text-center text-muted small">— OR —</div>
+            <label class="form-label">Upload JD PDF</label>
+            <input class="form-control" id="jd_pdf" type="file" name="jd_pdf" accept="application/pdf" />
+            <div class="form-text">PDF only. Max size: 10 MB.</div>
+            <button class="btn btn-primary mt-2" type="submit"><i class="bi bi-magic"></i> Generate Panel</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="h6 text-uppercase text-muted">Tips</h3>
+          <ul class="small mb-0 ps-3">
+            <li>Paste a clear JD for best SME prompts.</li>
+            <li>Uploading PDF preserves formatting.</li>
+            <li>You can edit SME prompts before interview.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+document.getElementById('jdForm').addEventListener('submit', function(e){
+  const text = document.getElementById('jd_text').value.trim();
+  const file = document.getElementById('jd_pdf').files[0];
+  if(!text && !file){
+    e.preventDefault();
+    alert('Please paste JD text or upload a JD PDF.');
+    return;
+  }
+  if(file){
+    const max = 10 * 1024 * 1024;
+    if(file.type !== 'application/pdf' || !file.name.toLowerCase().endsWith('.pdf')){
+      e.preventDefault();
+      alert('Only PDF files are allowed.');
+      return;
+    }
+    if(file.size > max){
+      e.preventDefault();
+      alert('File too large. Max 10 MB.');
+      return;
+    }
+  }
+});
+</script>
+{% endblock %}

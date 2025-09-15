@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section class="p-0 border-0 bg-transparent">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="h5 mb-3 d-flex align-items-center gap-2"><i class="bi bi-person-vcard"></i> 3) Upload Resume (optional)</h2>
+      <form id="resumeForm" action="/upload_resume" method="post" enctype="multipart/form-data" class="vstack gap-2">
+        <label class="form-label">Paste Resume Text</label>
+        <textarea class="form-control" name="resume_text" rows="8" placeholder="Paste the resume text here..."></textarea>
+        <div class="text-center text-muted small">— OR —</div>
+        <label class="form-label">Upload Resume PDF</label>
+        <input class="form-control" id="resume_pdf" type="file" name="resume_pdf" accept="application/pdf" />
+        <div class="form-text">PDF only. Max size: 10 MB.</div>
+        <button class="btn btn-outline-primary mt-2" type="submit"><i class="bi bi-file-earmark-ruled"></i> Analyze Resume</button>
+      </form>
+
+      <form action="/start_interview" method="post" class="mt-3">
+        <button class="btn btn-primary" type="submit"><i class="bi bi-play-circle"></i> Start Interview</button>
+      </form>
+    </div>
+  </div>
+</section>
+<script>
+document.getElementById('resumeForm').addEventListener('submit', function(e){
+  const file = document.getElementById('resume_pdf').files[0];
+  if(file){
+    const max = 10 * 1024 * 1024;
+    if(file.type !== 'application/pdf' || !file.name.toLowerCase().endsWith('.pdf')){
+      e.preventDefault();
+      alert('Only PDF files are allowed.');
+      return;
+    }
+    if(file.size > max){
+      e.preventDefault();
+      alert('File too large. Max 10 MB.');
+      return;
+    }
+  }
+});
+</script>
+{% endblock %}

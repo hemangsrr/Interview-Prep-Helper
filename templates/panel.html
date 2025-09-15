@@ -1,0 +1,31 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section class="p-0 border-0 bg-transparent">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="h5 mb-3 d-flex align-items-center gap-2"><i class="bi bi-people"></i> 2) Review & Edit SME Panel</h2>
+      <form action="/save_panel" method="post" class="vstack gap-3">
+        {% for p in panel %}
+        <div class="card border-0 bg-light">
+          <div class="card-body">
+            <div class="row g-2">
+              <div class="col-12 col-md-4">
+                <label class="form-label">Name</label>
+                <input class="form-control" type="text" name="name_{{ loop.index0 }}" value="{{ p.name or p['name'] }}" />
+              </div>
+              <div class="col-12 col-md-8">
+                <label class="form-label">System Prompt</label>
+                <textarea class="form-control" name="prompt_{{ loop.index0 }}" rows="6">{{ p.system_prompt or p['system_prompt'] }}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        <div class="d-flex justify-content-end">
+          <button class="btn btn-primary" type="submit"><i class="bi bi-arrow-right"></i> Proceed</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

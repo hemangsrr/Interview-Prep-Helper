@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section>
+  <h2 class="mb-3">Interview Feedback</h2>
+  <div class="card" style="padding:1rem;">
+    <div class="markdown" id="feedback-html">{{ summary_html | safe }}</div>
+  </div>
+  <div style="margin-top:1rem; display:flex; gap:.5rem;">
+    <a id="btn-dl" class="btn" href="/download_feedback" onclick="this.classList.add('disabled'); this.textContent='Preparing...';">Download PDF</a>
+    <a class="btn secondary" href="/">Start New Interview</a>
+  </div>
+</section>
+{% endblock %}

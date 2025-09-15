@@ -1,0 +1,70 @@
+body{font-family: system-ui, Arial; margin:0; padding:0; background:#f6f7fb; color:#222}
+header{background:#111827;color:#fff;padding:1rem}
+header h1{margin:0}
+main{max-width:900px;margin:1rem auto;padding:0 1rem}
+section{background:#fff;padding:1rem 1.2rem;border-radius:10px; box-shadow: 0 1px 3px rgba(0,0,0,.08);}
+label{display:block;margin:.5rem 0 .25rem}
+textarea,input[type=text]{width:100%;box-sizing:border-box;padding:.5rem;border:1px solid #ddd;border-radius:6px}
+button{margin-top:.75rem;padding:.6rem 1rem;border:none;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer}
+button:hover{background:#1d4ed8}
+.or{margin:.5rem 0;color:#666;text-align:center}
+.card{border:1px solid #eee;border-radius:8px;padding:.8rem;margin:.8rem 0;background:#fafafa}
+.flash{list-style:none;padding:0}
+.flash li{padding:.5rem;border-radius:6px;margin:.3rem 0}
+.flash .error{background:#fee2e2;color:#991b1b}
+.flash .success{background:#dcfce7;color:#166534}
+#qa{margin-top:1rem}
+.bubble{background:#f8fafc;border-radius:12px;padding:.7rem .9rem;margin:.6rem 0; box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.bubble.appear{animation:fadeSlide .25s ease-out both}
+.user.appear{animation:fadeSlideRight .25s ease-out both}
+.agent.appear{animation:fadeSlideLeft .25s ease-out both}
+.turn-sep{height:1px;background:linear-gradient(90deg,rgba(0,0,0,.08),rgba(0,0,0,.02));margin:.4rem 0}
+.bubble .bubble-row{display:flex;align-items:flex-start;gap:.6rem}
+.bubble .avatar{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:600; box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.bubble .content{flex:1}
+.bubble.agent{background:#eef6ff}
+.bubble.user{background:#e5e7eb;text-align:right}
+/* Distinct agent color accents */
+.agent-a{border-left:4px solid #2563eb}
+.agent-b{border-left:4px solid #10b981}
+.agent-c{border-left:4px solid #f59e0b}
+.agent-d{border-left:4px solid #ef4444}
+.avatar.agent-a{background:#2563eb}
+.avatar.agent-b{background:#10b981}
+.avatar.agent-c{background:#f59e0b}
+.avatar.agent-d{background:#ef4444}
+small.hint{display:block;color:#6b7280;margin-top:.25rem}
+.btn{display:inline-block;background:#2563eb;color:#fff;padding:.6rem 1rem;border-radius:6px;text-decoration:none}
+.btn:hover{background:#1d4ed8}
+.btn.secondary{background:#6b7280}
+.btn.secondary:hover{background:#4b5563}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.8);display:flex;align-items:center;justify-content:center;z-index:1000}
+.overlay-content{background:#fff;padding:1.2rem 1.4rem;border-radius:10px;max-width:420px;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,.2)}
+.loader{margin-top:1rem;padding:.6rem 1rem;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;color:#92400e}
+/* Gradient header styling */
+.app-header{background:linear-gradient(135deg,#0ea5e9,#6366f1)}
+/* Dark mode tweaks */
+.dark body{background:#0b1020; color:#e5e7eb}
+.dark section{background:#0f172a; color:#e5e7eb; box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.dark .bubble{background:#0f172a; box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.dark .bubble.user{background:#1f2937}
+.dark .turn-sep{background:linear-gradient(90deg,rgba(255,255,255,.1),rgba(255,255,255,.03))}
+.dark .markdown pre{background:#111827}
+.dark .card{background:#0f172a; color:#e5e7eb}
+.dark .form-control, .dark textarea{background:#0b1327; color:#e5e7eb; border-color:#334155}
+.dark .bg-light{background:#0f172a !important}
+.dark .text-muted, .dark .form-text{color:#9ca3af !important}
+.dark label.form-label{color:#e5e7eb}
+/* Markdown content styling */
+.markdown h1,.markdown h2,.markdown h3{margin-top:1rem}
+.markdown p{margin:.4rem 0}
+.markdown ul{padding-left:1.2rem; margin:.4rem 0}
+.markdown ol{padding-left:1.2rem; margin:.4rem 0}
+.markdown code{background:#f3f4f6; padding:.1rem .3rem; border-radius:4px}
+.markdown pre{background:#0b1020; color:#e5e7eb; padding:.6rem; border-radius:8px; overflow:auto}
+/* Disabled buttons */
+.btn.disabled, .btn:disabled{opacity:.65; pointer-events:none}
+
+@keyframes fadeSlide{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)}}
+@keyframes fadeSlideLeft{from{opacity:0; transform:translate(-6px,6px)} to{opacity:1; transform:translate(0,0)}}
+@keyframes fadeSlideRight{from{opacity:0; transform:translate(6px,6px)} to{opacity:1; transform:translate(0,0)}}

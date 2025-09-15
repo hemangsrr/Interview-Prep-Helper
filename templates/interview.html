@@ -1,0 +1,207 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section>
+  <h2>4) Interview</h2>
+  <div id="qa"></div>
+  <div id="controls">
+    <button id="btn-stop">Stop Interview</button>
+  </div>
+  <div id="answer-box" style="display:none;">
+    <label>Your Answer</label>
+    <textarea id="answer" rows="6"></textarea>
+    <div style="display:flex; gap:.5rem; align-items:center;">
+      <button id="btn-submit">Submit Answer</button>
+      <button id="btn-mic" type="button" class="btn secondary" title="Toggle mic">🎤</button>
+      <span id="mic-status" class="hint" style="display:none;">Listening...</span>
+    </div>
+  </div>
+  <div id="loader" style="display:none;" class="loader">Thinking... please wait</div>
+  <div id="overlay" class="overlay" style="display:none;">
+    <div class="overlay-content">
+      <h3>Interview Ended</h3>
+      <p>Your interview has ended. You can now view your feedback.</p>
+      <a id="btn-feedback" class="btn" href="/feedback" onclick="this.classList.add('disabled'); this.innerHTML='<i class=\'bi bi-arrow-repeat\' style=\'animation:spin 1s linear infinite\'></i> Loading...';">Show Feedback</a>
+    </div>
+  </div>
+</section>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js" crossorigin="anonymous"></script>
+<script>
+// Spinner animation
+const style = document.createElement('style');
+style.innerHTML = '@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}';
+document.head.appendChild(style);
+if (typeof io === 'undefined') {
+  alert('Unable to load Socket.IO client. Please check your network/CSP and retry.');
+}
+const room = "{{ sid }}";
+const socket = io();
+socket.on('connect', ()=>{ socket.emit('join', {room}); });
+
+function setLoading(isLoading){
+  const submitBtn = document.getElementById('btn-submit');
+  const answer = document.getElementById('answer');
+  document.getElementById('loader').style.display = isLoading ? 'block' : 'none';
+  submitBtn.disabled = isLoading;
+  answer.disabled = isLoading;
+}
+
+// --- Streaming render state ---
+let currentSpanId = null;
+let ttsBuffer = '';
+let ttsUtterQueue = [];
+const synth = window.speechSynthesis;
+function speakSentence(sentence){
+  try{
+    const u = new SpeechSynthesisUtterance(sentence);
+    u.rate = 1.0; u.pitch = 1.0; u.lang = (navigator.language || 'en-US');
+    synth.speak(u);
+  }catch(e){/* no-op if not supported */}
+}
+function handleStreamTextChunk(text){
+  // Append to current span
+  const span = document.getElementById(currentSpanId);
+  if(span){ span.textContent += text; }
+  // TTS sentence parsing
+  ttsBuffer += text;
+  const parts = ttsBuffer.split(/([.!?]+\s+)/);
+  if(parts.length > 1){
+    // Reconstruct in pairs: sentence + delimiter
+    let consumed = '';
+    for(let i=0;i<parts.length-1;i+=2){
+      const sentence = (parts[i] + (parts[i+1]||'')).trim();
+      if(sentence){ speakSentence(sentence); consumed += parts[i] + (parts[i+1]||''); }
+    }
+    ttsBuffer = ttsBuffer.slice(consumed.length);
+  }
+}
+
+socket.on('question_start', (data)=>{
+  setLoading(true);
+  // Create a fresh bubble per question
+  const qa = document.getElementById('qa');
+  currentSpanId = 'q_stream_' + Date.now();
+  // determine color class per agent
+  window.__agentColors = window.__agentColors || {};
+  const palette = ['agent-a','agent-b','agent-c','agent-d'];
+  const key = (data.agent||'agent').toLowerCase();
+  if(!window.__agentColors[key]){
+    const next = Object.keys(window.__agentColors).length % palette.length;
+    window.__agentColors[key] = palette[next];
+  }
+  const colorCls = window.__agentColors[key];
+  const initials = (data.agent||'A').trim().split(/\s+/).map(s=>s[0]).slice(0,2).join('').toUpperCase();
+  // add separator before each new turn
+  qa.insertAdjacentHTML('beforeend', `<div class=\"turn-sep\"></div>`);
+  qa.insertAdjacentHTML('beforeend', `
+    <div class=\"bubble agent ${colorCls} appear\">
+      <div class=\"bubble-row\">
+        <span class=\"avatar ${colorCls}\">${initials}</span>
+        <div class=\"content\"><strong>${data.agent}:</strong> <span id=\"${currentSpanId}\"></span></div>
+      </div>
+    </div>`);
+  // Reset TTS buffer
+  ttsBuffer = '';
+});
+
+socket.on('question_chunk', (data)=>{
+  handleStreamTextChunk(data.text || '');
+});
+
+socket.on('question_end', ()=>{
+  // Flush remaining TTS buffer
+  if(ttsBuffer.trim()){ speakSentence(ttsBuffer.trim()); ttsBuffer=''; }
+  setLoading(false);
+  document.getElementById('answer-box').style.display='block';
+});
+
+async function nextQuestionStream(){
+  setLoading(true);
+  await fetch('/api/next_question_stream', {method:'POST'});
+}
+
+// --- Auto start first question on load ---
+window.addEventListener('load', ()=>{ nextQuestionStream(); });
+
+async function submitAnswer(){
+  const answer = document.getElementById('answer').value;
+  if(!answer.trim()) return;
+  const qa = document.getElementById('qa');
+  qa.insertAdjacentHTML('beforeend', `<div class=\"bubble user appear\"><strong>You:</strong> ${answer}</div>`);
+  document.getElementById('answer').value='';
+  document.getElementById('answer-box').style.display='none';
+  setLoading(true);
+  const res = await fetch('/api/submit_answer', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({answer})});
+  const data = await res.json();
+  setLoading(false);
+  if(data.done){
+    showOverlay();
+  } else {
+    // Auto advance to next question
+    await nextQuestionStream();
+  }
+}
+
+async function stopInterview(){
+  await fetch('/api/stop', {method:'POST'});
+  showOverlay();
+}
+
+function showOverlay(){
+  document.getElementById('controls').style.display='none';
+  document.getElementById('answer-box').style.display='none';
+  const overlay = document.getElementById('overlay');
+  overlay.style.display='flex';
+}
+
+// --- ASR (Web Speech) ---
+let recognizing = false;
+let recog = null;
+let silenceTimer = null;
+function getRecognition(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r = new SR();
+  r.lang = (navigator.language || 'en-US');
+  r.continuous = true;
+  r.interimResults = true;
+  return r;
+}
+function startMic(){
+  if(recognizing) return;
+  recog = getRecognition();
+  if(!recog){ alert('Speech Recognition not supported in this browser.'); return; }
+  recognizing = true;
+  document.getElementById('mic-status').style.display='inline';
+  recog.onresult = (e)=>{
+    const answerEl = document.getElementById('answer');
+    let interim = '';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const res = e.results[i];
+      if(res.isFinal){
+        answerEl.value += (answerEl.value && !answerEl.value.endsWith(' ')?' ':'') + res[0].transcript.trim();
+      } else {
+        interim += res[0].transcript;
+      }
+    }
+    // Reset long-silence timer on any result
+    if(silenceTimer) clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(()=>{ stopMic(); }, 2500);
+  };
+  recog.onerror = ()=>{ stopMic(); };
+  recog.onend = ()=>{ recognizing=false; document.getElementById('mic-status').style.display='none'; };
+  recog.start();
+  // Start long-silence timer initially
+  silenceTimer = setTimeout(()=>{ stopMic(); }, 6000);
+}
+function stopMic(){
+  try{ if(recog){ recog.stop(); } }catch(e){}
+  recognizing = false;
+  document.getElementById('mic-status').style.display='none';
+  if(silenceTimer) clearTimeout(silenceTimer);
+}
+
+document.getElementById('btn-submit').addEventListener('click', submitAnswer);
+document.getElementById('btn-stop').addEventListener('click', stopInterview);
+document.getElementById('btn-mic').addEventListener('click', ()=>{ recognizing ? stopMic() : startMic(); });
+</script>
+{% endblock %}
